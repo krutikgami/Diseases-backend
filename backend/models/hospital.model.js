@@ -47,25 +47,11 @@ const hospitalSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
-    total_oxygen: {
+    total_oxygen_capacity: {
         type: Number,
         required: true
     },
-    icu_bed_availability: {
-        type: Number,
-        required: true
-    },
-    covid_isolation_ward_status: {
-        type: String,
-        enum: ["Available", "Full", "Not Available"], 
-        required: true
-    },
-    oxygen_supply_status: {
-        type: String,
-        enum: ["Stable", "Low", "Critical"],
-        required: true
-    },
-    ventilator_availability: {
+    total_icu_bed: {
         type: Number,
         required: true
     },
@@ -73,28 +59,15 @@ const hospitalSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    ppe_kit_availability: {
-        type: String,
-        enum: ["Sufficient", "Limited", "Out of Stock"], 
-        required: true
-    },
-    hospital_emergency_admission_rate: {
+    total_ppe_kit:{
         type: Number,
         required: true
     },
-    icu_utilization_trend: {
+    total_doctors: {
         type: Number,
         required: true
     },
-    medical_supply_chain_efficiency: {
-        type: Number,
-        required: true
-    },
-    total_doctor_availability: {
-        type: Number,
-        required: true
-    },
-    total_nurses_availability: {
+    total_nurses: {
         type: Number,
         required: true
     }

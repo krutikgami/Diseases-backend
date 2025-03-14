@@ -10,7 +10,7 @@ name: {
     type: String, 
     required: true 
 },
-  description: { 
+description: { 
     type: String, 
     required:true
  },
@@ -29,8 +29,28 @@ name: {
   severe_cases: {
      type: Number, 
      required: true 
-    },
-  total_deaths: { 
+  },
+  total_case_registered: { 
+    type: Number, 
+    required: true 
+},
+active_case: { 
+  type: Number, 
+  required: true 
+},
+hotspot: { 
+  type: [String], 
+  required:true
+},
+disease_type: { 
+  type: String, 
+  required: true
+},
+disease_recovery_rate: { 
+  type: Number, 
+  required: true
+},
+total_deaths: { 
     type: Number, 
     required: true 
 },
@@ -42,39 +62,34 @@ name: {
     type: Number, 
     required: true
  },
-  occupied_oxygen: { 
+occupied_oxygen: { 
     type: Number, 
     required: true 
 },
-  disease_type: { 
-    type: String, 
-    required: true
- },
-  hotspot: { 
-    type: [String], 
-    required:true
- },
-  total_case_registered: { 
+isolation_ward_status: {
+  type: String,
+  enum: ["Available", "Full", "Not Available"], 
+  required: true
+},
+oxygen_supply_status: {
+  type: String,
+  enum: ["Stable", "Low", "Critical"],
+  required: true
+},
+ppe_kit_availability: {
+  type: String,
+  enum: ["Sufficient", "Limited", "Out of Stock"], 
+  required: true
+},
+mortality_rate: { 
+  type: Number, 
+  required: true 
+},
+ vaccinated_coverage: { 
     type: Number, 
     required: true 
 },
-  recovered_rate: { 
-    type: Number, 
-    required: true
- },
-  mortality_rate: { 
-    type: Number, 
-    required: true 
-},
-  active_case: { 
-    type: Number, 
-    required: true 
-},
-  vaccinated_coverage: { 
-    type: Number, 
-    required: true 
-},
-  symptoms_severity: { 
+symptoms_severity: { 
     type: String, 
     enum: ['Mild', 'Moderate', 'Severe', 'Critical'], 
     default: 'Mild',
@@ -86,10 +101,19 @@ name: {
     default: 'All Seasons',
     required: true
   },
-  disease_recovery_rate: { 
-    type: Number, 
+  hospital_emergency_admission_rate: {
+    type: Number,
     required: true
- }
+},
+icu_utilization: {
+    type: Number,
+    required: true
+},
+date: {
+    type: Date,
+    default: Date.now,
+    required: true
+}
 },{timestamps:true})
 
 export const Disease = mongoose.model('Disease',diseaseSchema);
