@@ -18,7 +18,13 @@ const HospitalRegister = async (req, res) => {
             return res.status(400).json({ message: "All fields are required" });
         }
 
-        const existingHospital = await Hospital.findOne({ registration_number });
+        const existingHospital = await Hospital.findOne({ 
+            $or: [
+                { registration_number },
+                { phone_no },
+                { email }
+            ]
+        });
 
         if (existingHospital) {
             return res.status(400).json({ message: "Hospital already exists!" });
