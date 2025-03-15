@@ -64,7 +64,7 @@ const loginUser = async(req,res) =>{
 const getUser = async(req,res)=>{
     try {
         const users = await User.find({
-            role: "districtuser"
+            role: "district-head"
         }).select("-password -confirmPassword");
         if(!users){
             return res.status(404).json({message:"No Users Found"});
