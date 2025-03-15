@@ -48,4 +48,36 @@ const HospitalRegister = async (req, res) => {
     }
 }
 
-export { HospitalRegister };
+const HospitalLogin = async(req,res)=>{
+    try {
+        const {credential,password} = req.body;
+        if(!credential || !password || credential == "" || password ==""){
+            return res.status(404).json({message:"All fields are required"});
+        }
+        
+        const hospital = await Hospital.findOne({
+            $or:[
+                {registration_number:credential},
+                {email:credential},
+            ]
+        })
+        if(!hospital){
+            return res.status(404).json({message:"Hospital not Exist"});
+        }
+
+        const passwordMatch  = await hospital.matchPassword(password);
+        
+        
+        if(!passwordMatch){
+            return res.status(404).json({message:"Invalid Credentials"});
+        }
+        
+        const createdHospital = await Hospital.findById(hospital._id).select("-password -confirmPassword");
+
+        return res.status(200).json({data: createdHospital,message:"Hospital LoggedIn successfully"});
+
+    } catch (error) {
+        return res.status(500).json({message:"Internal Server Error"});
+    }
+}
+export { HospitalRegister,HospitalLogin};
