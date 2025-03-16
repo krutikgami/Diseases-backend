@@ -9,12 +9,14 @@ const DiseasesRegister = async (req, res) => {
             total_case_registered, active_case, hotspot, disease_type, disease_recovery_rate,
             total_deaths, occupied_beds, occupied_ventilators, occupied_oxygen, isolation_ward_status,
             oxygen_supply_status, ppe_kit_availability, mortality_rate, vaccinated_coverage,
-            symptoms_severity, seasonal_pattern, hospital_emergency_admission_rate, icu_utilization,date
+            symptoms_severity, seasonal_pattern, hospital_emergency_admission_rate, icu_utilization, date,
+            cases_by_age_gender
         } = req.body;
 
+        
         if (
             [hospital_id, name, description, disease_type, symptoms_severity, seasonal_pattern,
-             isolation_ward_status, oxygen_supply_status, ppe_kit_availability]
+             isolation_ward_status, oxygen_supply_status, ppe_kit_availability,date]
                 .some(e => typeof e !== "string" || e.trim() === "") ||
             !Array.isArray(symptoms) || symptoms.length === 0 ||
             !Array.isArray(hotspot) || hotspot.length === 0 ||
@@ -23,7 +25,6 @@ const DiseasesRegister = async (req, res) => {
                 disease_recovery_rate, mortality_rate, vaccinated_coverage,
                 hospital_emergency_admission_rate, icu_utilization]
                 .some(e => e === undefined || e === null || isNaN(Number(e)))
-                || date === undefined || date === null
         ) {
             return res.status(400).json({ message: "All fields are required and must be valid." });
         }
@@ -37,12 +38,43 @@ const DiseasesRegister = async (req, res) => {
             return res.status(400).json({ message: "Hospital is not registered." });
         }
 
+       
+        const formattedCasesByAgeGender = {
+            "0-18": {
+                male: cases_by_age_gender?.["0-18"]?.male || 0,
+                female: cases_by_age_gender?.["0-18"]?.female || 0,
+            
+            },
+            "19-35": {
+                male: cases_by_age_gender?.["19-35"]?.male || 0,
+                female: cases_by_age_gender?.["19-35"]?.female || 0,
+                
+            },
+            "36-50": {
+                male: cases_by_age_gender?.["36-50"]?.male || 0,
+                female: cases_by_age_gender?.["36-50"]?.female || 0,
+               
+            },
+            "51-65": {
+                male: cases_by_age_gender?.["51-65"]?.male || 0,
+                female: cases_by_age_gender?.["51-65"]?.female || 0,
+               
+            },
+            "65+": {
+                male: cases_by_age_gender?.["65+"]?.male || 0,
+                female: cases_by_age_gender?.["65+"]?.female || 0,
+                
+            }
+        };
+
         const newDisease = new Disease({
             hospital_id, name, description, symptoms, mild_cases, moderate_cases, severe_cases,
             total_case_registered, active_case, hotspot, disease_type, disease_recovery_rate,
             total_deaths, occupied_beds, occupied_ventilators, occupied_oxygen, isolation_ward_status,
             oxygen_supply_status, ppe_kit_availability, mortality_rate, vaccinated_coverage,
-            symptoms_severity, seasonal_pattern, hospital_emergency_admission_rate, icu_utilization,date
+            symptoms_severity, seasonal_pattern, hospital_emergency_admission_rate, icu_utilization,
+            cases_by_age_gender: formattedCasesByAgeGender,
+            date: new Date(date)
         });
 
         await newDisease.save();

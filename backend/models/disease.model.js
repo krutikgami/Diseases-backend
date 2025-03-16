@@ -101,6 +101,13 @@ symptoms_severity: {
     default: 'All Seasons',
     required: true
   },
+  cases_by_age_gender: {
+    "0-18": { male: Number, female: Number},
+    "19-35": { male: Number, female: Number },
+    "36-50": { male: Number, female: Number },
+    "51-65": { male: Number, female: Number },
+    "65+": { male: Number, female: Number}
+},
   hospital_emergency_admission_rate: {
     type: Number,
     required: true
@@ -110,10 +117,8 @@ icu_utilization: {
     required: true
 },
 date: {
-    type: Date,
-    default: Date.now,
+    type: String,
     required: true
 }
-},{timestamps:true})
-
+},{timestamps:true});
 export const Disease = mongoose.model('Disease',diseaseSchema);
