@@ -9,8 +9,6 @@ const uploadHospitalData = async (req, res) => {
         if (!fileUrl) {
             return res.status(400).json({ message: "fileUrl is required" });
         }
-
-        
         const response = await fetch(fileUrl);
         const arrayBuffer = await response.arrayBuffer();
         const workbook = xlsx.read(arrayBuffer, { type: "buffer" });
@@ -46,6 +44,7 @@ const uploadHospitalData = async (req, res) => {
                     total_ppe_kit: Number(item.total_ppe_kit) || 0,
                     total_doctors: Number(item.total_doctors) || 0,
                     total_nurses: Number(item.total_nurses) || 0,
+        
                 };
             })
         );

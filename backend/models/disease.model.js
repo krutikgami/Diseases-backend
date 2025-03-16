@@ -117,7 +117,7 @@ icu_utilization: {
     required: true
 },
 date: {
-    type: String,
+    type: Date,
     required: true
 }
 },{timestamps:true});

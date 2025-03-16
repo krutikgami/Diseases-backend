@@ -5,7 +5,7 @@ const uploadDiseaseFile = async (req, res) => {
     try {
         const { hospital_id,fileUrl } = req.body; 
 
-        if ( !fileUrl) {
+        if (!hospital_id || !fileUrl) {
             return res.status(400).json({ message: "hospital_id and fileUrl are required" });
         }
   
@@ -20,7 +20,16 @@ const uploadDiseaseFile = async (req, res) => {
         if (data.length === 0) {
             return res.status(400).json({ message: "Excel file is empty" });
         }
-
+        const convertExcelDateToISO = (excelSerial) => {
+            if (!isNaN(excelSerial)) {
+            
+                const excelEpoch = new Date(1900, 0, 1);
+                return new Date(excelEpoch.getTime() + (excelSerial - 2) * 86400000)
+                    .toISOString()
+                    .split("T")[0]; 
+            }
+            return excelSerial;
+        };
       
         const diseaseRecords = data.map((item) => ({
             hospital_id,
@@ -55,7 +64,7 @@ const uploadDiseaseFile = async (req, res) => {
             },
             hospital_emergency_admission_rate: item.hospital_emergency_admission_rate || 0,
             icu_utilization: item.icu_utilization || 0,
-            date: item.date ? new Date(item.date) : new Date()
+            date: new Date(convertExcelDateToISO(item.date))
         }));
 
         
