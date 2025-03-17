@@ -1,4 +1,4 @@
-import { User } from "../models/user.model";
+import { User } from "../models/user.model.js";
 
 
 const protectStateHead = async(req,res,next)=>{
@@ -9,10 +9,10 @@ const protectStateHead = async(req,res,next)=>{
          return res.status(401).json({message:"All fields are required"});
      }
      if(role != "state-head"){
-        return res.status(401).json({message:"Unauthorized role"});
+        return res.status(401).json({message:"Unauthorized access"});
      }
 
-     const user = User.findOne({
+     const user = await User.findOne({
         $and:[
             {email},
             {role}
@@ -20,7 +20,7 @@ const protectStateHead = async(req,res,next)=>{
     }
      );
      if(!user){
-         return res.status(400).json({message:"User not found"})
+         return res.status(400).json({message:"Unauthorized access"})
      }
 
      req.user = user;

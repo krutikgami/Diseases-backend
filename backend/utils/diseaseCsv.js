@@ -5,7 +5,7 @@ const uploadDiseaseFile = async (req, res) => {
     try {
         const { hospital_id,fileUrl } = req.body; 
 
-        if (!hospital_id || !fileUrl) {
+        if ( !hospital_id,!fileUrl) {
             return res.status(400).json({ message: "hospital_id and fileUrl are required" });
         }
   
