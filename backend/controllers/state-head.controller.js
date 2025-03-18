@@ -5,6 +5,9 @@ const stateDashboardDateFilter = async (req, res) => {
     try {
         const { days = 7, district,disease } = req.body;
         const daysAgo = new Date();
+        const lastMonth = new Date();
+        const today = new Date();
+        lastMonth.setDate(lastMonth.getMonth()-1);
         daysAgo.setDate(daysAgo.getDate() - (parseInt(days) || 7));
 
         let hospitalIds = [];
@@ -17,15 +20,17 @@ const stateDashboardDateFilter = async (req, res) => {
             hospitalIds = hospitals.map(h => h._id);
         }
 
+        if(hospitalIds.length === 0){
+            return res.status(400).json({message:"Data not available!!"});
+        }
+        
         if (hospitalIds.length > 0) {
             hospitalFilter = { hospital_id: { $in: hospitalIds } };
         }
-
         let diseaseFilter = {};
         if (disease) {
             diseaseFilter = { name: disease };
         }
-
 
         const totalStats = await Disease.aggregate([
             { 
@@ -109,6 +114,26 @@ const stateDashboardDateFilter = async (req, res) => {
             },
         ]);
 
+        //
+        const fetchmonthStats = async(lastMonth,today)=>{
+           const fetchstats = await Disease.aggregate([
+            {
+                $match: {
+                    date: { $gte: today, $lt: lastMonth },
+                    ...hospitalFilter,
+                    ...diseaseFilter
+                }
+            },
+            {
+                $group:{
+                    _id:null,
+                    total_cases:{$sum:"$total_case_registered"}
+                }
+            }
+           ])
+           return fetchstats[0] || {};
+        }
+
         const stats = totalStats[0] || { total_cases: 0, active_cases: 0, recovered: 0, deaths: 0 };
         const recoveryRate = stats.recovered
         const mortalityRate = stats.total_cases > 0 ? (stats.deaths / stats.total_cases) * 100 : 0;
@@ -116,6 +141,16 @@ const stateDashboardDateFilter = async (req, res) => {
         const total_male_female = stats.male_cases + stats.female_cases;
         const total_male = stats.male_cases > 0 ? (stats.male_cases/total_male_female) * 100 : 0;
         const total_female = stats.female_cases > 0 ? (stats.female_cases/total_male_female) * 100 : 0;
+
+        const currentMonthStats = await fetchmonthStats(new Date(today.getFullYear(), today.getMonth(), 1), today);
+        const lastMonthStats = await fetchmonthStats(new Date(lastMonth.getFullYear(), lastMonth.getMonth(), 1), new Date(today.getFullYear(), today.getMonth(), 1));
+
+        const calculatePercentageChange = (current, previous) => {
+            if (previous === 0) return "N/A"; 
+            return (((current - previous) / previous) * 100).toFixed(2);
+        };
+
+        const total_month_cases = (((currentMonthStats - lastMonthStats)/lastMonthStats)*100).toFixed(2) || 0;
         
         const ageGroupCases = {
             "0-18": stats.age_0_18 || 0,
@@ -217,6 +252,9 @@ const stateDashboardDateFilter = async (req, res) => {
             { $limit: 3 }
         ]);
 
+
+        
+
         return res.status(200).json({
             stats: {
                 total_cases: stats.total_cases,
@@ -230,6 +268,7 @@ const stateDashboardDateFilter = async (req, res) => {
             monthlyData,
             districtData,
             outbreakAlerts,
+            total_month_cases,
             message: "Data fetched successfully"
         });
 
