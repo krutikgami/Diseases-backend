@@ -114,8 +114,9 @@ const stateDashboardDateFilter = async (req, res) => {
             },
         ]);
 
-        //
-        const fetchmonthStats = async(lastMonth,today)=>{
+
+        //fetch the stats PERCENTAGE OF THE MONTH
+        const fetchmonthStats = async(today,lastMonth)=>{
            const fetchstats = await Disease.aggregate([
             {
                 $match: {
@@ -127,12 +128,16 @@ const stateDashboardDateFilter = async (req, res) => {
             {
                 $group:{
                     _id:null,
-                    total_cases:{$sum:"$total_case_registered"}
+                    total_cases:{$sum:"$total_case_registered"},
+                    active_cases: { $sum: "$active_case" },
+                    recovered: { $avg: "$disease_recovery_rate" },
+                    deaths: { $sum: "$total_deaths" },
                 }
             }
            ])
-           return fetchstats[0] || {};
+           return fetchstats[0] || { total_cases: 0};
         }
+
 
         const stats = totalStats[0] || { total_cases: 0, active_cases: 0, recovered: 0, deaths: 0 };
         const recoveryRate = stats.recovered
@@ -143,14 +148,25 @@ const stateDashboardDateFilter = async (req, res) => {
         const total_female = stats.female_cases > 0 ? (stats.female_cases/total_male_female) * 100 : 0;
 
         const currentMonthStats = await fetchmonthStats(new Date(today.getFullYear(), today.getMonth(), 1), today);
-        const lastMonthStats = await fetchmonthStats(new Date(lastMonth.getFullYear(), lastMonth.getMonth(), 1), new Date(today.getFullYear(), today.getMonth(), 1));
+        const lastMonthStats = await fetchmonthStats(
+            new Date(today.getFullYear(), today.getMonth() - 1, 1),
+            new Date(today.getFullYear(), today.getMonth(), 1)
+        );
+
 
         const calculatePercentageChange = (current, previous) => {
             if (previous === 0) return "N/A"; 
             return (((current - previous) / previous) * 100).toFixed(2);
         };
 
-        const total_month_cases = (((currentMonthStats - lastMonthStats)/lastMonthStats)*100).toFixed(2) || 0;
+         //percentage for the total_cases
+        const total_month_cases = calculatePercentageChange(currentMonthStats.total_cases,lastMonthStats.total_cases);
+        const total_month_active_cases = calculatePercentageChange(currentMonthStats.active_cases,lastMonthStats.active_cases);
+        const total_month_recovered_rate = calculatePercentageChange(currentMonthStats.recovered,lastMonthStats.recovered);
+        const curr_mortality_rate =  currentMonthStats.total_cases > 0 ? (currentMonthStats.deaths / currentMonthStats.total_cases) * 100 : 0;
+        const last_mortality_rate =  lastMonthStats.total_cases > 0 ? (lastMonthStats.deaths / lastMonthStats.total_cases) * 100 : 0;
+        const total_month_mortality_rate = calculatePercentageChange(curr_mortality_rate,last_mortality_rate);
+        
         
         const ageGroupCases = {
             "0-18": stats.age_0_18 || 0,
@@ -176,7 +192,7 @@ const stateDashboardDateFilter = async (req, res) => {
             {
                 $group: {
                     _id: { month: "$month", disease: "$name" },
-                    total_cases: { $sum: "$total_case_registered" }
+                    total_cases: { $sum: "$total_case_registered" }, 
                 }
             },
             {
@@ -258,9 +274,13 @@ const stateDashboardDateFilter = async (req, res) => {
         return res.status(200).json({
             stats: {
                 total_cases: stats.total_cases,
+                total_month_cases,
                 active_cases: stats.active_cases,
+                total_month_active_cases,
                 recovery_rate: recoveryRate.toFixed(2),
+                total_month_recovered_rate,
                 mortality_rate: mortalityRate.toFixed(2),
+                total_month_mortality_rate,
                 total_male: total_male.toFixed(2),
                 total_female : total_female.toFixed(2),
                 max_age_group: { age_range: max_age_group[0], cases: max_age_group[1] }
@@ -268,7 +288,6 @@ const stateDashboardDateFilter = async (req, res) => {
             monthlyData,
             districtData,
             outbreakAlerts,
-            total_month_cases,
             message: "Data fetched successfully"
         });
 
