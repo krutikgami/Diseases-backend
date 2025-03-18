@@ -1,25 +1,30 @@
-import { User } from "../models/user.model";
+import { User } from "../models/user.model.js";
 
-export const protectDistrictHead = (req,res,next)=>{
+export const protectDistrictHead = async(req,res,next)=>{
     try {
-        const {email,role} = req.body;
+        const {email,role,district} = req.body;
         
         if(!email || !role || email=="" || role == ""){
             return res.status(400).json({message:"All fields are required"});
         }
-    
+        
+        if (!district || district == "") {
+            return res.status(400).json({message:"District is Mandatory!"});
+        }
+        
         if(role!="district-head"){
-            return res.status(400).json({message:"Unauthorized role"});
+            return res.status(400).json({message:"Unauthorized Access!"});
         }
     
-        const user = User.findOne({
+        const user = await User.findOne({
             $and:[
                 {email},
-                {role}
+                {role},
+                {district}
             ]
         });
         if(!user){
-            return res.status(401).json({message:"User not found"});
+            return res.status(401).json({message:"Unauthorized Access!"});
         }
     
         req.user = user;

@@ -80,4 +80,21 @@ const HospitalLogin = async(req,res)=>{
         return res.status(500).json({message:"Internal Server Error"});
     }
 }
-export { HospitalRegister,HospitalLogin};
+
+const hospitalDelete = async(req,res)=>{
+    try{
+        const {email} = req.body;
+        if(!email || email==""){
+            return res.status(400).json({message:"Email is required"});
+        }
+        const hospital = await Hospital.findOne({email});
+        if(!hospital){
+            return res.status(404).json({message:"Hospital not found"});
+        }
+        await Hospital.findByIdAndDelete(hospital._id);
+        return res.status(200).json({message:"Hospital Deleted Successfully"});
+    }catch(error){
+        res.status(500).json({message:"Internal Server Error",error:error.message});
+    }
+}
+export { HospitalRegister,HospitalLogin,hospitalDelete};
