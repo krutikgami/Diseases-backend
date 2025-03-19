@@ -97,4 +97,20 @@ const hospitalDelete = async(req,res)=>{
         res.status(500).json({message:"Internal Server Error",error:error.message});
     }
 }
-export { HospitalRegister,HospitalLogin,hospitalDelete};
+
+const getHospital = async(req,res)=>{
+    try {
+        const {district} = req.body;
+        if (!district || district == "") {
+            return res.status(400).json({ message: "District is Mandatory!" });
+        }
+        const hospitals = await Hospital.find({district}).select("-password -confirmPassword");
+        if (!hospitals) {
+            return res.status(404).json({ message: "No Hospital Found" });
+        }
+        return res.status(200).json({data:hospitals,message:"Hospitals Fetched Successfully"});
+    } catch (error) {
+        return res.status(500).json({message:"Internal Server Error",error:error.message});
+    }
+}
+export { HospitalRegister,HospitalLogin,hospitalDelete,getHospital};

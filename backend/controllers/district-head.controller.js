@@ -7,6 +7,8 @@ const districtDashboardDateFilter = async (req, res) => {
         const daysAgo = new Date();
         const lastMonth = new Date();
         const today = new Date();
+        console.log(today);
+        
         lastMonth.setDate(lastMonth.getMonth()-1);
         daysAgo.setDate(daysAgo.getDate() - (parseInt(days) || 7));
 
@@ -140,7 +142,6 @@ const districtDashboardDateFilter = async (req, res) => {
            return fetchstats[0] || { total_cases: 0};
         }
 
-
         const stats = totalStats[0] || { total_cases: 0, active_cases: 0, recovered: 0, deaths: 0 };
         const recoveryRate = stats.recovered
         const mortalityRate = stats.total_cases > 0 ? (stats.deaths / stats.total_cases) * 100 : 0;
@@ -211,7 +212,6 @@ const districtDashboardDateFilter = async (req, res) => {
             { $sort: { _id: 1 } }
         ]);
 
-       
         const districtData = await Disease.aggregate([
             {
                 $match: {
@@ -271,7 +271,6 @@ const districtDashboardDateFilter = async (req, res) => {
         ]);
 
 
-
         //RESOURCE-ALLOCATION
         const occupiedResources = await Disease.aggregate([
             {
@@ -296,7 +295,8 @@ const districtDashboardDateFilter = async (req, res) => {
             total_occupied_ventilators: 0,
             total_occupied_oxygen: 0
         };
-        
+
+        console.log(occupiedData);
         
         const totalHospitalResources = await Hospital.aggregate([
             {
