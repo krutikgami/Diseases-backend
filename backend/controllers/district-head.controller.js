@@ -3,7 +3,7 @@ import { Disease } from "../models/disease.model.js";
 
 const districtDashboardDateFilter = async (req, res) => {
     try {
-        const { days = 7, district,disease } = req.body;
+        const { days = 7, district,disease,hotspot } = req.body;
         const daysAgo = new Date();
         const lastMonth = new Date();
         const today = new Date();
@@ -31,9 +31,15 @@ const districtDashboardDateFilter = async (req, res) => {
         if (hospitalIds.length > 0) {
             hospitalFilter = { hospital_id: { $in: hospitalIds } };
         }
+        
         let diseaseFilter = {};
         if (disease) {
             diseaseFilter = { name: disease };
+        }
+
+        let hotspotFilter = {};
+        if(hotspot){
+            hotspotFilter = { hotspot: hotspot };
         }
 
         const totalStats = await Disease.aggregate([
@@ -41,7 +47,8 @@ const districtDashboardDateFilter = async (req, res) => {
                 $match: { 
                     date: { $gte: daysAgo },
                     ...hospitalFilter,
-                    ...diseaseFilter
+                    ...diseaseFilter,
+                    ...hotspotFilter      
                 }
             },
             {
@@ -126,7 +133,8 @@ const districtDashboardDateFilter = async (req, res) => {
                 $match: {
                     date: { $gte: today, $lt: lastMonth },
                     ...hospitalFilter,
-                    ...diseaseFilter
+                    ...diseaseFilter,
+                    ...hotspotFilter
                 }
             },
             {
@@ -186,7 +194,8 @@ const districtDashboardDateFilter = async (req, res) => {
                 $match: {
                     date: { $gte: daysAgo },
                     ...hospitalFilter,
-                    ...diseaseFilter
+                    ...diseaseFilter,
+                    ...hotspotFilter
                 }
             },
             {
@@ -217,7 +226,8 @@ const districtDashboardDateFilter = async (req, res) => {
                 $match: {
                     date: { $gte: daysAgo },
                     ...hospitalFilter,
-                    ...diseaseFilter
+                    ...diseaseFilter,
+                    ...hotspotFilter
                 }
             },
             {
@@ -229,10 +239,12 @@ const districtDashboardDateFilter = async (req, res) => {
                 }
             },
             { $unwind: "$hospital" },
+            {$unwind: "$hotspot"},
             {
                 $group: {
                     _id: "$hospital.district",
-                    total_cases: { $sum: "$total_case_registered" }
+                    total_cases: { $sum: "$total_case_registered" },
+                    hotspot :{$addToSet:"$hotspot"}
                 }
             },
             { $sort: { total_cases: -1 } }
@@ -245,6 +257,7 @@ const districtDashboardDateFilter = async (req, res) => {
                     date: { $gte: daysAgo },
                     ...hospitalFilter,
                     ...diseaseFilter,
+                    ...hotspotFilter,
                     total_case_registered: { $gte: 25 } 
                 }
             },
@@ -262,6 +275,7 @@ const districtDashboardDateFilter = async (req, res) => {
                     _id: 0,
                     disease: "$name",
                     district: "$hospital.district",
+                    hotspot:"$hotspot",
                     cases: "$total_case_registered",
                     date: 1
                 }
@@ -277,7 +291,7 @@ const districtDashboardDateFilter = async (req, res) => {
                 $match: {
                     date: { $gte: today },
                     ...hospitalFilter,
-                    ...diseaseFilter
+                    ...diseaseFilter,
                 }
             },
             {
@@ -317,7 +331,6 @@ const districtDashboardDateFilter = async (req, res) => {
             total_ventilators: 0,
             total_oxygen_capacity: 0
         };
-        
         
         const availableResources = {
             total_occupied_beds:  occupiedData.total_occupied_beds,
@@ -364,4 +377,41 @@ const districtDashboardDateFilter = async (req, res) => {
     }
 };
 
-export { districtDashboardDateFilter };
+const fetchHotspot = async(req,res) =>{
+    const {district} = req.body;
+
+    if(district=="" || !district){
+        return res.status(400).json({message:"District is required"});
+    }
+
+    const hospitalData = await Hospital.find({district}).select("_id");
+    
+    if(hospitalData.length === 0){
+        return res.status(400).json({message:"District is not found"});
+    }
+    const hospitalIds = hospitalData.map(h=>h._id);
+    
+    if(hospitalIds.length === 0){
+        return res.status(400).json({message:"No hospital found"});
+    }
+    const hotspot = await Disease.aggregate([
+        {
+            $match:{
+                hospital_id:{$in:hospitalIds},
+            }
+        },
+        {$unwind:"$hotspot" },
+        {
+            $group:{
+                _id:null,
+                hotspot:{$addToSet:"$hotspot"}
+            }
+        }
+    ])
+    if(hotspot.length === 0){
+        return res.status(400).json({message:"No hotspot found"});
+    }
+    return res.status(200).json({hotspot});
+}
+
+export { districtDashboardDateFilter,fetchHotspot };
